@@ -7,6 +7,13 @@
   <style>
     /* ── RESET & FULLSCREEN LOCK ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Fluid unit constrained by BOTH width and height.
+       1.78 ≈ 16/9, so on a standard landscape screen 1vw ≈ 1.78vh.
+       min() picks the more limiting dimension, so text and spacing
+       also shrink when the screen is short (small height).
+       Declared on :root so fixed/overlay elements (e.g. dropdown)
+       can also resolve it. */
+    :root { --mtr-u: min(1vw, 1.78vh); }
     html, body {
       width: 100vw; height: 100vh;
       overflow: hidden; /* NO scrolling */
@@ -27,11 +34,6 @@
 
     /* ── MAIN CONTAINER: full viewport, flex column ── */
     .mtr-container {
-      /* Fluid unit constrained by BOTH width and height.
-         1.78 ≈ 16/9, so on a standard landscape screen 1vw ≈ 1.78vh.
-         min() picks the more limiting dimension, so text also shrinks
-         when the screen is short (small height), not just when narrow. */
-      --mtr-u: min(1vw, 1.78vh);
       display: flex;
       flex-direction: column;
       width: 100vw;
@@ -199,8 +201,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: clamp(70px, calc(12 * var(--mtr-u)), 110px);
-      height: clamp(70px, calc(12 * var(--mtr-u)), 110px);
+      /* Width/height limited by BOTH viewport width (12vw) and row height.
+         16vh ≈ row-height(20.5vh) × 0.78, leaving ~11% margin top & bottom. */
+      width:  clamp(70px,  min(12vw, 16vh), 110px);
+      height: clamp(70px,  min(12vw, 16vh), 110px);
       border-radius: 50%;
       font-size: clamp(2.5rem, calc(5 * var(--mtr-u)), 4rem);
       font-weight: 400;
@@ -228,14 +232,18 @@
       text-align: center;
     }
 
-    /* ── RESPONSIVE: landscape orientation ── */
+    /* ── RESPONSIVE: portrait orientation ── */
     @media (orientation: portrait) {
       .mtr-header { height: 14vh; }
       .mtr-row { height: 21vh; }
       .mtr-header-label { font-size: clamp(2rem, calc(5 * var(--mtr-u)), 3.5rem); }
       .mtr-header-clock { font-size: clamp(2.5rem, calc(6 * var(--mtr-u)), 5rem); }
       .mtr-row-dest { font-size: clamp(2rem, calc(5 * var(--mtr-u)), 4rem); }
-      .mtr-row-platform { width: clamp(60px, calc(10 * var(--mtr-u)), 90px); height: clamp(60px, calc(10 * var(--mtr-u)), 90px); font-size: clamp(2rem, calc(4 * var(--mtr-u)), 3rem); }
+      .mtr-row-platform {
+        width:  clamp(60px, min(10vw, 16vh), 90px);
+        height: clamp(60px, min(10vw, 16vh), 90px);
+        font-size: clamp(2rem, calc(4 * var(--mtr-u)), 3rem);
+      }
       .mtr-row-eta { font-size: clamp(2rem, calc(5 * var(--mtr-u)), 4rem); min-width: clamp(160px, 24vw, 300px); }
     }
   </style>
