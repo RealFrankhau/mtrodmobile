@@ -50,11 +50,15 @@
       padding: 0 calc(3 * var(--mtr-u));
       flex-shrink: 0;
       transition: background-color 0.4s ease;
+      gap: calc(2 * var(--mtr-u));
     }
     .mtr-header-left {
       display: flex;
       align-items: center;
       gap: calc(2 * var(--mtr-u));
+      min-width: 0;       /* allow flex children to shrink below content size */
+      flex: 1 1 auto;     /* take available space, but can shrink */
+      overflow: hidden;   /* hide any momentary overflow while JS resizes */
     }
     .mtr-header-label {
       font-size: clamp(2.5rem, calc(6 * var(--mtr-u)), 5rem);
@@ -64,6 +68,9 @@
       cursor: pointer;
       transition: opacity 0.2s;
       line-height: 1;
+      white-space: nowrap;   /* keep on one line; JS will shrink font instead */
+      flex-shrink: 1;
+      min-width: 0;
     }
     .mtr-header-label:hover { opacity: 0.85; }
     .mtr-header-sep {
@@ -71,6 +78,7 @@
       color: #FFFFFF;
       font-weight: 300;
       opacity: 0.7;
+      flex-shrink: 0;
     }
     .mtr-header-clock {
       font-size: clamp(3rem, calc(7 * var(--mtr-u)), 6rem);
@@ -80,6 +88,7 @@
       font-variant-numeric: tabular-nums;
       font-family: 'MTR EN';
       line-height: 1;
+      flex-shrink: 0;
     }
 
     /* ── DROPDOWN OVERLAY ── */
@@ -532,7 +541,49 @@ function updateHeaderLabels() {
   const staName = staEntry ? (currentLang === 'en' ? staEntry.en : staEntry.zh) : currentSta;
   $('mtrLineLabel').textContent = currentLang === 'en' ? line.en : line.zh;
   $('mtrStaLabel').textContent = staName;
+  fitHeaderLabels();
 }
+
+/* ── Auto-shrink header label font-size so line + sep + station
+       always fit on ONE line. Binary-searches the largest px size
+       that still fits within the available width. ── */
+function fitHeaderLabels() {
+  const lineEl = $('mtrLineLabel');
+  const sepEl  = document.querySelector('.mtr-header-sep');
+  const staEl  = $('mtrStaLabel');
+  const left   = document.querySelector('.mtr-header-left');
+  if (!lineEl || !sepEl || !staEl || !left) return;
+
+  const applySize = (px) => {
+    const s = px + 'px';
+    lineEl.style.fontSize = s;
+    sepEl.style.fontSize  = s;
+    staEl.style.fontSize  = s;
+  };
+  const fits = () =>
+    lineEl.scrollWidth + sepEl.scrollWidth + staEl.scrollWidth <= left.clientWidth;
+
+  // Start from the currently-clamped font-size, then shrink if needed.
+  const maxPx = parseFloat(getComputedStyle(lineEl).fontSize) || 40;
+  const minPx = maxPx * 0.4;
+  applySize(maxPx);
+  if (fits()) return;
+
+  let lo = minPx, hi = maxPx;
+  for (let i = 0; i < 12; i++) {
+    const mid = (lo + hi) / 2;
+    applySize(mid);
+    if (fits()) lo = mid; else hi = mid;
+  }
+  applySize(lo);
+}
+
+/* Re-fit on window resize (throttled with rAF) */
+let _resizeRaf = 0;
+window.addEventListener('resize', () => {
+  if (_resizeRaf) return;
+  _resizeRaf = requestAnimationFrame(() => { _resizeRaf = 0; fitHeaderLabels(); });
+});
 
 /* ── Clock ── */
 function updateClock() {
