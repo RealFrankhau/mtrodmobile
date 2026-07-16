@@ -226,7 +226,7 @@
       font-size: clamp(2.5rem, calc(6 * var(--mtr-u)), 5.5rem);
       font-weight: 400;
       color: #000000;
-      min-width: clamp(200px, 30vw, 380px);
+      min-width: clamp(240px, 36vw, 460px);
       text-align: right;
       line-height: 1.1;
       letter-spacing: 0.02em;
@@ -687,7 +687,8 @@ function selectStation(line, sta) {
 function formatEta(mins, lang) {
   const m = parseInt(mins, 10);
   if (isNaN(m) || m < 0) return '—';
-  if (m <= 1) return lang === 'en' ? 'Arriving' : '即將抵達';
+  if (m === 0) return lang === 'en' ? 'Departing' : '即將開出';
+  if (m === 1) return lang === 'en' ? 'Arriving' : '即將抵達';
   return lang === 'en' ? m + ' min' : m + ' 分鐘';
 }
 
